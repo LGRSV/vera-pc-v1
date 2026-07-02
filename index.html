@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1220">
+  <title>VERA PC | Vegetação</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root{
+      --ink:#e8eef9; --muted:#9babbd; --panel:#101827; --panel2:#172235; --line:#273851;
+      --accent:#5eead4; --accent2:#2dd4bf; --warn:#fbbf24; --danger:#fb7185; --ok:#34d399;
+      --shadow:0 18px 50px rgba(0,0,0,.34);
+    }
+    *{box-sizing:border-box}
+    html,body,#app{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#08111f;color:var(--ink)}
+    button,input,select,textarea{font:inherit}
+    #app{display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+    header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;background:linear-gradient(135deg,#0d1728,#101f34);border-bottom:1px solid var(--line);z-index:20}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}.brand-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#38bdf8);display:grid;place-items:center;color:#052e2b;font-weight:900}.brand strong{display:block;letter-spacing:.02em}.brand small{display:block;color:var(--muted);font-size:.75rem;margin-top:1px}
+    .header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .btn{border:1px solid var(--line);border-radius:9px;background:#142036;color:var(--ink);padding:8px 10px;cursor:pointer;transition:.18s ease;white-space:nowrap}
+    .btn:hover{border-color:#4f6d94;background:#1b2a44}.btn.primary{background:var(--accent2);border-color:var(--accent2);color:#052e2b;font-weight:800}.btn.danger{color:#fecdd3;border-color:#7f1d1d}
+    main{display:grid;grid-template-columns:340px minmax(0,1fr) 330px;min-height:0}
+    aside{min-width:0;overflow:auto;background:var(--panel);padding:14px;border-right:1px solid var(--line)}
+    #detailPanel{border-right:0;border-left:1px solid var(--line)}
+    #map{height:100%;width:100%;background:#0d1726}
+    .card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 6px 16px rgba(0,0,0,.11)}
+    .card h2{font-size:.88rem;letter-spacing:.04em;text-transform:uppercase;color:#c6d3e6;margin:0 0 10px}.card h3{font-size:.84rem;margin:0 0 7px;color:#c6d3e6}
+    .metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metric{border:1px solid #283a55;background:#111c2e;border-radius:10px;padding:10px}.metric strong{display:block;font-size:1.15rem}.metric span{font-size:.72rem;color:var(--muted)}
+    label{display:block;font-size:.75rem;color:#b9c6d6;margin:8px 0 5px}select,input,textarea{width:100%;background:#0b1423;border:1px solid #314661;color:var(--ink);border-radius:8px;padding:9px;outline:none}select:focus,input:focus,textarea:focus{border-color:var(--accent)}textarea{resize:vertical;min-height:76px}
+    .tiny{font-size:.73rem;color:var(--muted);line-height:1.35}.notice{font-size:.78rem;line-height:1.4;border-left:3px solid var(--accent);padding:8px 10px;background:#0e2630;border-radius:0 7px 7px 0;color:#d9f9f5}.notice.warn{border-left-color:var(--warn);background:#2b2312;color:#fef3c7}.notice.error{border-left-color:var(--danger);background:#331523;color:#ffe4e6}
+    .feeder-list{max-height:250px;overflow:auto;border:1px solid #293c57;border-radius:8px;background:#0b1423}.feed-row{display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid #213149;cursor:pointer}.feed-row:last-child{border-bottom:0}.feed-row:hover{background:#132138}.feed-row input{width:auto;margin:0;accent-color:var(--accent)}.feed-row b{font-size:.79rem}.feed-row small{margin-left:auto;color:var(--muted);font-size:.7rem}
+    .row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions .btn{font-size:.8rem;padding:9px 7px}.hidden{display:none!important}
+    .point-list{display:flex;flex-direction:column;gap:7px;max-height:220px;overflow:auto}.point-item{border:1px solid #2d405c;border-radius:8px;padding:8px;cursor:pointer;background:#101b2d}.point-item:hover,.point-item.selected{border-color:var(--accent);background:#15313a}.point-item b{font-size:.77rem;display:block}.point-item span{font-size:.7rem;color:var(--muted)}
+    .empty{font-size:.8rem;color:var(--muted);padding:10px 0}.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:.7rem;color:#c9d5e7}.legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px}.leaflet-control-attribution{font-size:10px!important}
+    .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#132037;color:#e8eef9}.leaflet-popup-content{margin:12px;font-size:12px}.leaflet-bar a{background:#16253d;color:#e8eef9;border-bottom-color:#304765}.leaflet-bar a:hover{background:#213654;color:#fff}.leaflet-control-layers{background:#142036!important;color:#e8eef9!important;border:1px solid #2b415e!important}
+    .leaflet-control-layers label{color:#e8eef9!important;margin:4px 0!important}.flash{animation:flash 1.1s ease}@keyframes flash{0%,100%{outline-color:transparent}50%{outline:3px solid var(--accent)}}
+    @media(max-width:1050px){main{grid-template-columns:300px minmax(0,1fr)}#detailPanel{position:absolute;right:12px;bottom:12px;width:min(330px,calc(100vw - 24px));max-height:50vh;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);z-index:800;padding:12px}.desktop-only{display:none}}
+    @media(max-width:700px){header{padding:10px 12px}.brand small{display:none}.header-actions .btn:not(.primary){display:none}main{grid-template-columns:1fr}#sidebar{position:absolute;top:58px;left:10px;z-index:800;width:min(308px,calc(100vw - 20px));max-height:calc(100vh - 82px);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:10px}.mobile-toggle{display:inline-block!important}.sidebar-collapsed{display:none}#detailPanel{bottom:10px;right:10px;max-height:42vh}.card{margin-bottom:9px}}
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <div class="brand-mark">V</div>
+      <div><strong>VERA PC</strong><small>Vegetação • Porto Nacional</small></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn mobile-toggle hidden" id="toggleSidebar">Camadas</button>
+      <button class="btn" id="fitMap">Enquadrar trechos</button>
+      <button class="btn" id="geolocate">Minha localização</button>
+      <button class="btn primary" id="markMode">Clique no mapa para marcar</button>
+    </div>
+  </header>
+  <main>
+    <aside id="sidebar">
+      <section class="card">
+        <h2>Base de trechos</h2>
+        <div class="metric-grid">
+          <div class="metric"><strong id="metricTrechos">—</strong><span>trechos visíveis</span></div>
+          <div class="metric"><strong id="metricKm">—</strong><span>km visíveis</span></div>
+          <div class="metric"><strong id="metricPontos">0</strong><span>pontos marcados</span></div>
+          <div class="metric"><strong id="metricFotos">0</strong><span>com observação</span></div>
+        </div>
+      </section>
+      <section class="card">
+        <h2>Alimentadores</h2>
+        <div class="row"><button class="btn" id="selectAll">Todos</button><button class="btn" id="clearFeeders">Nenhum</button></div>
+        <div id="feederList" class="feeder-list" aria-label="Filtros de alimentadores"></div>
+      </section>
+      <section class="card">
+        <h2>Operação rápida</h2>
+        <div class="notice">Com a marcação ativa, basta clicar na vegetação no mapa. O app associa automaticamente o ponto ao trecho mais próximo.</div>
+        <div class="actions" style="margin-top:10px">
+          <button class="btn primary" id="newPoint">Marcar ponto</button>
+          <button class="btn" id="exportGeoJSON">Exportar GeoJSON</button>
+          <button class="btn" id="exportCSV">Exportar CSV</button>
+          <label class="btn" for="importFile" style="display:grid;place-items:center;margin:0">Importar arquivo</label>
+          <input id="importFile" type="file" accept=".geojson,.json" class="hidden">
+        </div>
+      </section>
+      <section class="card">
+        <h2>Pontos deste dispositivo</h2>
+        <div id="pointList" class="point-list"></div>
+        <div class="row" style="margin-top:9px"><button class="btn danger" id="clearPoints">Apagar todos</button><button class="btn" id="copySummary">Copiar resumo</button></div>
+      </section>
+      <section class="card">
+        <div class="legend">
+          <span><i style="background:#34d399"></i>Baixa</span>
+          <span><i style="background:#fbbf24"></i>Média</span>
+          <span><i style="background:#fb923c"></i>Alta</span>
+          <span><i style="background:#fb7185"></i>Crítica</span>
+        </div>
+        <p class="tiny">Os trechos vieram do KMZ consolidado. Postes/chaves não foram carregados neste site.</p>
+      </section>
+    </aside>
+    <div id="map" role="application" aria-label="Mapa de vegetação e trechos"></div>
+    <aside id="detailPanel">
+      <section class="card" style="margin:0">
+        <h2>Registro de vegetação</h2>
+        <div id="emptyDetail" class="empty">Clique no mapa para criar um ponto e editar os detalhes aqui.</div>
+        <div id="detailForm" class="hidden">
+          <div id="pointLocation" class="notice" style="margin-bottom:10px"></div>
+          <label for="type">Tipo</label>
+          <select id="type"><option>Vegetação</option><option>Árvore próxima</option><option>Galho/ramo</option><option>Risco de toque</option><option>Outro</option></select>
+          <label for="priority">Prioridade</label>
+          <select id="priority"><option>Baixa</option><option selected>Média</option><option>Alta</option><option>Crítica</option></select>
+          <label for="observation">Observação</label>
+          <textarea id="observation" maxlength="500" placeholder="Ex.: copa próxima à rede, solicitar poda."></textarea>
+          <div class="row" style="margin-top:10px"><button class="btn primary" id="savePoint">Salvar alterações</button><button class="btn danger" id="deletePoint">Excluir ponto</button></div>
+          <p id="saveStatus" class="tiny"></p>
+        </div>
+      </section>
+    </aside>
+  </main>
+</div>
+<script>
+(() => {
+  const STORAGE_KEY = 'vera-pc-v1:pontos';
+  const map = L.map('map', { zoomControl: false, preferCanvas: true, minZoom: 11 });
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  const satellite = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { maxZoom: 19, attribution: 'Tiles © Esri' }
+  ).addTo(map);
+  const streets = L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { maxZoom: 19, attribution: '© OpenStreetMap contributors' }
+  );
+  L.control.layers({ 'Satélite': satellite, 'Mapa base': streets }, null, { position: 'topright' }).addTo(map);
+
+  const els = {
+    metricTrechos: document.getElementById('metricTrechos'), metricKm: document.getElementById('metricKm'),
+    metricPontos: document.getElementById('metricPontos'), metricFotos: document.getElementById('metricFotos'),
+    feederList: document.getElementById('feederList'), pointList: document.getElementById('pointList'),
+    emptyDetail: document.getElementById('emptyDetail'), detailForm: document.getElementById('detailForm'),
+    pointLocation: document.getElementById('pointLocation'), type: document.getElementById('type'),
+    priority: document.getElementById('priority'), observation: document.getElementById('observation'),
+    saveStatus: document.getElementById('saveStatus'), sidebar: document.getElementById('sidebar')
+  };
+
+  let source = null, trechosLayer = null, activeFeeders = new Set(), points = readPoints(), selectedId = null;
+  let markEnabled = true;
+  const pointLayer = L.layerGroup().addTo(map);
+  const highlightLayer = L.layerGroup().addTo(map);
+  const feederColors = ['#22d3ee','#5eead4','#60a5fa','#c084fc','#fbbf24','#fb7185','#a3e635','#f97316','#38bdf8'];
+
+  function readPoints(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) { return []; }
+  }
+  function persist(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(points));
+  }
+  function uid(){
+    return 'PC-' + new Date().toISOString().replace(/\D/g,'').slice(0,14) + '-' +
+      (crypto.randomUUID ? crypto.randomUUID().slice(0,8) : Math.random().toString(36).slice(2,10));
+  }
+  function fmtKm(v){ return Number(v || 0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function fmtDate(v){
+    try { return new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date(v)); }
+    catch (_) { return v || ''; }
+  }
+  function escapeHtml(value){
+    return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function priorityColor(p){ return ({'Baixa':'#34d399','Média':'#fbbf24','Alta':'#fb923c','Crítica':'#fb7185'})[p] || '#38bdf8'; }
+
+  function distanceToSegmentMeters(latlng, a, b){
+    const lat0 = latlng.lat * Math.PI / 180, mLat = 111320, mLon = 111320 * Math.cos(lat0);
+    const px = latlng.lng * mLon, py = latlng.lat * mLat;
+    const ax = a[0] * mLon, ay = a[1] * mLat, bx = b[0] * mLon, by = b[1] * mLat;
+    const dx = bx-ax, dy = by-ay;
+    const t = Math.max(0, Math.min(1, ((px-ax)*dx + (py-ay)*dy) / ((dx*dx + dy*dy) || 1)));
+    const x = ax+t*dx, y = ay+t*dy;
+    return Math.hypot(px-x, py-y);
+  }
+  function nearestTrecho(latlng){
+    if(!source) return null;
+    let nearest = null;
+    for(const feature of source.features){
+      const p = feature.properties;
+      if(activeFeeders.size && !activeFeeders.has(p.alimentador)) continue;
+      const coords = feature.geometry.coordinates;
+      for(let i=0;i<coords.length-1;i++){
+        const d = distanceToSegmentMeters(latlng, coords[i], coords[i+1]);
+        if(!nearest || d < nearest.distanceM) nearest = { feature, distanceM: d };
+      }
+    }
+    return nearest;
+  }
+  function pointPopup(p){
+    return `<b>${escapeHtml(p.tipo || 'Vegetação')}</b><br>
+      <span>${escapeHtml(p.prioridade || 'Média')} · ${fmtDate(p.criadoEm)}</span><br>
+      <span>${escapeHtml(p.alimentador || 'Sem alimentador')} · trecho ${escapeHtml(p.trechoId || 'não associado')}</span>`;
+  }
+  function renderPoints(){
+    pointLayer.clearLayers();
+    for(const p of points){
+      const marker = L.circleMarker([p.lat,p.lng], {
+        radius: p.id === selectedId ? 9 : 7, color:'#062c2c', weight:2, fillColor:priorityColor(p.prioridade), fillOpacity:1
+      }).bindPopup(pointPopup(p));
+      marker.on('click', () => selectPoint(p.id, true));
+      marker.addTo(pointLayer);
+    }
+    els.metricPontos.textContent = points.length.toLocaleString('pt-BR');
+    els.metricFotos.textContent = points.filter(p => (p.observacao || '').trim()).length.toLocaleString('pt-BR');
+    renderPointList();
+  }
+  function renderPointList(){
+    if(!points.length){ els.pointList.innerHTML = '<div class="empty">Nenhum ponto salvo neste navegador.</div>'; return; }
+    els.pointList.innerHTML = points.slice().sort((a,b)=>new Date(b.criadoEm)-new Date(a.criadoEm)).map(p => `
+      <div class="point-item ${p.id===selectedId?'selected':''}" data-id="${escapeHtml(p.id)}">
+        <b>${escapeHtml(p.tipo || 'Vegetação')} · ${escapeHtml(p.prioridade || 'Média')}</b>
+        <span>${escapeHtml(p.alimentador || 'Sem alimentador')} · ${escapeHtml(p.trechoId || 'sem trecho')} · ${fmtDate(p.criadoEm)}</span>
+      </div>`).join('');
+    els.pointList.querySelectorAll('.point-item').forEach(item => item.addEventListener('click', () => selectPoint(item.dataset.id, true)));
+  }
+  function selectPoint(id, pan){
+    const p = points.find(x => x.id === id); if(!p) return;
+    selectedId = id;
+    els.emptyDetail.classList.add('hidden'); els.detailForm.classList.remove('hidden');
+    els.type.value = p.tipo || 'Vegetação'; els.priority.value = p.prioridade || 'Média'; els.observation.value = p.observacao || '';
+    const dist = Number.isFinite(p.distanciaTrechoM) ? ` · ${Math.round(p.distanciaTrechoM)} m do trecho` : '';
+    els.pointLocation.textContent = `${p.alimentador || 'Trecho não associado'} · ${p.trechoId || '—'}${dist}`;
+    els.saveStatus.textContent = `Criado em ${fmtDate(p.criadoEm)}.`;
+    renderPoints();
+    if(pan) map.setView([p.lat,p.lng], Math.max(map.getZoom(),17), { animate:true });
+  }
+  function clearSelection(){
+    selectedId = null; highlightLayer.clearLayers();
+    els.emptyDetail.classList.remove('hidden'); els.detailForm.classList.add('hidden');
+    renderPoints();
+  }
+  function addPoint(latlng){
+    const nearest = nearestTrecho(latlng);
+    const fp = nearest?.feature?.properties || {};
+    const p = {
+      id: uid(), lat: Number(latlng.lat.toFixed(7)), lng: Number(latlng.lng.toFixed(7)),
+      criadoEm: new Date().toISOString(), tipo:'Vegetação', prioridade:'Média', observacao:'',
+      alimentador: fp.alimentador || null, trechoId: fp.trecho_id || null,
+      distanciaTrechoM: nearest ? Number(nearest.distanceM.toFixed(1)) : null
+    };
+    points.push(p); persist(); selectPoint(p.id, true);
+    if(nearest?.feature){
+      highlightLayer.clearLayers();
+      L.geoJSON(nearest.feature,{style:{color:'#ffffff',weight:8,opacity:.95}}).addTo(highlightLayer);
+      setTimeout(() => highlightLayer.clearLayers(), 2300);
+    }
+  }
+  function styleFeature(feature){
+    const idx = feederNames.indexOf(feature.properties.alimentador);
+    const selected = !activeFeeders.size || activeFeeders.has(feature.properties.alimentador);
+    return { color: feederColors[idx % feederColors.length], weight:selected ? 3.3 : 0, opacity:selected ? .9 : 0, lineCap:'round', lineJoin:'round' };
+  }
+  let feederNames = [];
+  function redrawTrechos(){
+    if(!source) return;
+    if(trechosLayer) map.removeLayer(trechosLayer);
+    trechosLayer = L.geoJSON(source,{style:styleFeature,onEachFeature:(feature,layer)=>{
+      const p=feature.properties;
+      layer.bindTooltip(`<b>${p.alimentador}</b><br>Trecho ${p.trecho_id}<br>${fmtKm(p.km)} km`,{sticky:true,direction:'top'});
+      layer.on('click', e => { L.DomEvent.stop(e); showTrecho(feature, layer.getBounds()); });
+    }}).addTo(map);
+    updateMetrics(); renderFeeders();
+  }
+  function showTrecho(feature, bounds){
+    const p=feature.properties;
+    highlightLayer.clearLayers();
+    L.geoJSON(feature,{style:{color:'#ffffff',weight:8,opacity:.98}}).addTo(highlightLayer);
+    setTimeout(() => highlightLayer.clearLayers(),2600);
+    map.fitBounds(bounds,{padding:[40,40],maxZoom:18});
+    document.getElementById('markMode').textContent = `Trecho ${p.trecho_id} selecionado`;
+    setTimeout(()=>document.getElementById('markMode').textContent = markEnabled?'Clique no mapa para marcar':'Marcação pausada',1800);
+  }
+  function updateMetrics(){
+    const visible = source ? source.features.filter(f => !activeFeeders.size || activeFeeders.has(f.properties.alimentador)) : [];
+    els.metricTrechos.textContent = visible.length.toLocaleString('pt-BR');
+    els.metricKm.textContent = fmtKm(visible.reduce((acc,f)=>acc + Number(f.properties.km || 0),0));
+  }
+  function renderFeeders(){
+    if(!source) return;
+    const meta = source.metadata?.alimentadores || {};
+    els.feederList.innerHTML = feederNames.map((name,i) => {
+      const checked = !activeFeeders.size || activeFeeders.has(name);
+      const data = meta[name] || {};
+      return `<label class="feed-row"><input data-feeder="${name}" type="checkbox" ${checked?'checked':''}>
+        <span style="width:8px;height:8px;border-radius:50%;background:${feederColors[i%feederColors.length]};display:inline-block"></span>
+        <b>${name}</b><small>${data.trechos || 0} · ${fmtKm(data.km || 0)} km</small></label>`;
+    }).join('');
+    els.feederList.querySelectorAll('input[data-feeder]').forEach(cb=>cb.addEventListener('change',()=>{
+      const checked = Array.from(els.feederList.querySelectorAll('input[data-feeder]:checked')).map(x=>x.dataset.feeder);
+      activeFeeders = checked.length===feederNames.length ? new Set() : new Set(checked);
+      redrawTrechos();
+    }));
+  }
+  function dataBounds(){
+    return trechosLayer?.getBounds?.().isValid() ? trechosLayer.getBounds() : L.latLngBounds([-10.74,-48.42],[-10.67,-48.36]);
+  }
+  function download(name, content, type){
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type})); a.download=name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),500);
+  }
+  function exportGeoJSON(){
+    const out={type:'FeatureCollection',name:'Pontos de vegetação - VERA PC',features:points.map(p=>({type:'Feature',properties:{...p},geometry:{type:'Point',coordinates:[p.lng,p.lat]}}))};
+    download(`vera-pc-pontos-${new Date().toISOString().slice(0,10)}.geojson`,JSON.stringify(out,null,2),'application/geo+json');
+  }
+  function exportCSV(){
+    const head=['id','criado_em','lat','lon','tipo','prioridade','alimentador','trecho_id','distancia_trecho_m','observacao'];
+    const csv=[head,...points.map(p=>[p.id,p.criadoEm,p.lat,p.lng,p.tipo,p.prioridade,p.alimentador,p.trechoId,p.distanciaTrechoM,p.observacao])].map(row=>row.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(';')).join('\n');
+    download(`vera-pc-pontos-${new Date().toISOString().slice(0,10)}.csv`,'\ufeff'+csv,'text/csv;charset=utf-8');
+  }
+  function importGeoJSON(file){
+    const reader=new FileReader();
+    reader.onload=()=> {
+      try{
+        const data=JSON.parse(reader.result); const list=data?.features?.filter(f=>f.geometry?.type==='Point').map(f=> {
+          const c=f.geometry.coordinates, p=f.properties || {};
+          return {id:p.id || uid(),lat:Number(c[1]),lng:Number(c[0]),criadoEm:p.criadoEm||new Date().toISOString(),tipo:p.tipo||'Vegetação',prioridade:p.prioridade||'Média',observacao:p.observacao||'',alimentador:p.alimentador||null,trechoId:p.trechoId||null,distanciaTrechoM:p.distanciaTrechoM??null};
+        }) || [];
+        const existing=new Set(points.map(p=>p.id)); let added=0;
+        for(const item of list){if(!existing.has(item.id) && Number.isFinite(item.lat)&&Number.isFinite(item.lng)){points.push(item);existing.add(item.id);added++;}}
+        persist();renderPoints();alert(`${added} ponto(s) importado(s).`);
+      }catch(_){alert('Não foi possível ler este GeoJSON.');}
+    }; reader.readAsText(file);
+  }
+
+  document.getElementById('markMode').addEventListener('click',()=>{markEnabled=!markEnabled; document.getElementById('markMode').textContent=markEnabled?'Clique no mapa para marcar':'Marcação pausada';});
+  document.getElementById('newPoint').addEventListener('click',()=>{markEnabled=true;document.getElementById('markMode').textContent='Clique no mapa para marcar';});
+  document.getElementById('fitMap').addEventListener('click',()=>map.fitBounds(dataBounds(),{padding:[30,30]}));
+  document.getElementById('selectAll').addEventListener('click',()=>{activeFeeders=new Set();redrawTrechos();});
+  document.getElementById('clearFeeders').addEventListener('click',()=>{activeFeeders=new Set(['__none__']);redrawTrechos();});
+  document.getElementById('exportGeoJSON').addEventListener('click',exportGeoJSON);
+  document.getElementById('exportCSV').addEventListener('click',exportCSV);
+  document.getElementById('importFile').addEventListener('change',e=>{if(e.target.files[0]) importGeoJSON(e.target.files[0]);e.target.value='';});
+  document.getElementById('clearPoints').addEventListener('click',()=>{if(points.length && confirm('Apagar todos os pontos salvos neste navegador?')){points=[];persist();clearSelection();renderPoints();}});
+  document.getElementById('copySummary').addEventListener('click',async()=> {
+    const byFeeder={}; points.forEach(p=>byFeeder[p.alimentador || 'Sem alimentador']=(byFeeder[p.alimentador || 'Sem alimentador']||0)+1);
+    const text=`VERA PC — ${points.length} ponto(s) de vegetação\n`+Object.entries(byFeeder).map(([k,v])=>`${k}: ${v}`).join('\n');
+    try{await navigator.clipboard.writeText(text);alert('Resumo copiado.');}catch(_){prompt('Copie o resumo:',text);}
+  });
+  document.getElementById('geolocate').addEventListener('click',()=> {
+    if(!navigator.geolocation){alert('Geolocalização não é suportada neste navegador.');return;}
+    navigator.geolocation.getCurrentPosition(pos=>{const latlng=L.latLng(pos.coords.latitude,pos.coords.longitude);map.setView(latlng,18);if(markEnabled)addPoint(latlng);},()=>alert('Não foi possível obter a localização. Verifique a permissão do navegador.'),{enableHighAccuracy:true,timeout:12000});
+  });
+  document.getElementById('savePoint').addEventListener('click',()=> {
+    const p=points.find(x=>x.id===selectedId);if(!p)return;p.tipo=els.type.value;p.prioridade=els.priority.value;p.observacao=els.observation.value.trim();persist();els.saveStatus.textContent='Alterações salvas neste dispositivo.';renderPoints();
+  });
+  document.getElementById('deletePoint').addEventListener('click',()=> {
+    const p=points.find(x=>x.id===selectedId);if(!p)return;if(confirm('Excluir este ponto?')){points=points.filter(x=>x.id!==selectedId);persist();clearSelection();renderPoints();}
+  });
+  document.getElementById('toggleSidebar').addEventListener('click',()=>els.sidebar.classList.toggle('sidebar-collapsed'));
+  map.on('click',e=>{if(markEnabled)addPoint(e.latlng);});
+  map.on('locationfound',e=>map.setView(e.latlng,18));
+
+  fetch('./data/trechos-porto-nacional.geojson', {cache:'no-store'})
+    .then(r=>{if(!r.ok) throw new Error(r.status);return r.json();})
+    .then(data=>{source=data;feederNames=Object.keys(data.metadata?.alimentadores || {}).sort();activeFeeders=new Set();redrawTrechos();map.fitBounds(dataBounds(),{padding:[25,25]});renderPoints();})
+    .catch(err=> {
+      console.error(err);
+      document.getElementById('sidebar').insertAdjacentHTML('afterbegin','<div class="notice error">Não foi possível carregar a camada de trechos. Abra o site pela publicação do repositório (GitHub Pages) ou por um servidor local.</div>');
+    });
+})();
+</script>
+</body>
+</html>
