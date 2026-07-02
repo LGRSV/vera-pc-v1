@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07111f">
+  <title>Carregando VERA PC…</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <style>html,body{height:100%;margin:0;background:#07111f;color:#e8f0fb;font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:grid;place-items:center}.box{padding:20px;border:1px solid #2a405e;border-radius:12px;background:#111d30;text-align:center}.box b{display:block;margin-bottom:6px}.box small{color:#9db0c5}</style>
+</head>
+<body>
+  <div class="box"><b>VERA PC</b><small>Preparando o mapa de vegetação…</small></div>
+  <script>
+  (async function () {
+    try {
+      const response = await fetch('./app.html', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Não foi possível carregar a aplicação.');
+      let html = await response.text();
+      html = html
+        .replace('<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\\/script>', '')
+        .replace('<script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"><\\/script>', '');
+      document.open();
+      document.write(html);
+      document.close();
+    } catch (error) {
+      document.body.innerHTML = '<div class="box"><b>Não foi possível abrir o VERA PC.</b><small>Abra o site pela publicação do GitHub Pages e tente novamente.</small></div>';
+      console.error(error);
+    }
+  }());
+  </script>
+</body>
+</html>
