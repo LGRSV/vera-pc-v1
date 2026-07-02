@@ -111,10 +111,13 @@ const feederNames = Object.keys(BASE.metadata.alimentadores).sort();
 const map = L.map('map',{zoomControl:false,preferCanvas:true,minZoom:10});
 L.control.zoom({position:'bottomright'}).addTo(map);
 
+const _mbt = atob('cGsuZXlKMUlqb2lhbTloYjJ4aFoyRnlaWE1pTENKaElqb2lZMjF5TW5rMVpXMDJNR0kzY2pKNWNIWTNjWFpuWnpSdGJTSjkuYWZDTnd3Ukg4ZDVxQmZQbEg3YlBjdw==');
 const layers = {
-  'Satélite Google': L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,maxNativeZoom:20,attribution:'© Google'}),
-  'Satélite ESRI':   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'}),
-  'OpenStreetMap':   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'})
+  'Satélite Google':  L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,maxNativeZoom:20,attribution:'© Google'}),
+  'Satélite ESRI':    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'}),
+  'Mapbox Satélite':  L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token='+_mbt,{maxZoom:22,tileSize:512,zoomOffset:-1,attribution:'© Mapbox'}),
+  'Mapbox Híbrido':   L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}?access_token='+_mbt,{maxZoom:22,tileSize:512,zoomOffset:-1,attribution:'© Mapbox'}),
+  'OpenStreetMap':    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'}),
 };
 layers['Satélite Google'].addTo(map);
 L.control.layers(layers,null,{position:'topright'}).addTo(map);
